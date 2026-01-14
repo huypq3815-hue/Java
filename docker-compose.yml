@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: pba-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: planbook_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: pba_user
+      MYSQL_PASSWORD: pba_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  db_data:
