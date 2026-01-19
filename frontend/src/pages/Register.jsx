@@ -15,6 +15,7 @@ const Register = () => {
         setLoading(true);
 
         try {
+            //Api 
             await api.post('/auth/register', {
                 username: values.username,
                 email: values.email,
@@ -39,11 +40,41 @@ const Register = () => {
             justifyContent: 'center',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         }}>
-            <Card style={{ width: 450, boxShadow: '0 10px 40px rgba(0,0,0,0.15)', borderRadius: 12 }}>
-                <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <Title level={2} style={{ marginBottom: 8, color: '#667eea' }}>
-                            PlanbookAI
-                        </Title>
-                        <Text type="secondary">Tạo tài khoản mới</Text>
-                    </div>
+            <Card style={{
+                width: 450,
+                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                borderRadius: 12,
+                maxHeight: '90vh',
+                overflowY: 'auto',
+            }}>
+                < direction="vertical" size="large" style={{ width: '100%' }}>
+                {/* Logo & Title */}
+                <div style={{ textAlign: 'center' }}>
+                    <Title level={2} style={{ marginBottom: 8, color: '#667eea' }}>
+                        PlanbookAI
+                    </Title>
+                    <Text type="secondary">Tạo tài khoản mới</Text>
+                </div>
+
+                {/* Registration Form */}
+                <Form
+                    name="register"
+                    onFinish={onFinish}
+                    layout="vertical"
+                    autoComplete="off"
+                >
+                    {/* HỌ VÀ TÊN */}
+                    <Form.Item
+                        label="Họ và tên"
+                        name="fullName"
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập họ tên!' },
+                            { min: 3, message: 'Họ tên tối thiểu 3 ký tự!' }
+                        ]}
+                    >
+                        <Input
+                            prefix={<UserOutlined />}
+                            placeholder="Nguyễn Văn A"
+                            size="large"
+                        />
+                    </Form.Item>
