@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Form, Input, Button, Checkbox, Typography, message, Card, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../../config/api';
+import api from '../config/api';
 
 const { Title, Text } = Typography;
 const Login = () => {
@@ -50,12 +50,11 @@ const Login = () => {
             justifyContent: 'center',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         }}>
-            <Card
-                style={{
-                    width: 400,
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                    borderRadius: 12,
-                }}
+            <Card style={{
+                width: 400,
+                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                borderRadius: 12,
+            }}
             >
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                     {/* Logo & Title */}
