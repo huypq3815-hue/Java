@@ -25,12 +25,12 @@ axiosInstance.interceptors.request.use(
         }
 
         // Log request để debug (có thể tắt ở production)
-        console.log('🚀 Request:', config.method.toUpperCase(), config.url);
+        console.log('Request:', config.method.toUpperCase(), config.url);
 
         return config;
     },
     (error) => {
-        console.error('❌ Request Error:', error);
+        console.error('Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -39,13 +39,13 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response) => {
         // Log response để debug
-        console.log('✅ Response:', response.config.url, response.status);
+        console.log('Response:', response.config.url, response.status);
 
         // Return data trực tiếp để dễ sử dụng
         return response.data;
     },
     (error) => {
-        console.error('❌ Response Error:', error);
+        console.error('Response Error:', error);
 
         // Xử lý các loại lỗi khác nhau
         if (error.response) {
