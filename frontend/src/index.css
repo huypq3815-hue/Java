@@ -1,0 +1,137 @@
+/* ==========================================================================
+   1. RESET & BASE STYLES
+   ========================================================================== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f3f4f6; /* Màu nền xám nhẹ dịu mắt */
+  color: #1f2937;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   2. CUSTOM SCROLLBAR (Thanh cuộn đẹp hơn)
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; 
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; 
+}
+
+/* ==========================================================================
+   3. TYPOGRAPHY & LINKS
+   ========================================================================== */
+a {
+  color: #0891b2; /* Màu Cyan chủ đạo */
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0e7490;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #111827;
+  font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   4. ANT DESIGN OVERRIDES (Quan trọng cho Sidebar Gradient)
+   ========================================================================== */
+
+/* Làm trong suốt nền Menu để hiện màu Gradient của Sidebar */
+.ant-layout-sider {
+  background: transparent !important;
+}
+
+.ant-layout-sider-children .ant-menu.ant-menu-dark {
+  background: transparent !important;
+}
+
+/* Item menu khi được chọn (Active) */
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: rgba(255, 255, 255, 0.2) !important; /* Nền trắng mờ */
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Item menu khi di chuột qua (Hover) */
+.ant-menu-dark .ant-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+/* Submenu title */
+.ant-menu-dark .ant-menu-submenu-title:hover {
+  color: #fff !important;
+}
+
+/* Divider trong menu */
+.ant-menu-dark .ant-menu-item-divider {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ==========================================================================
+   5. PRINT STYLES (Cho tính năng In đề thi)
+   ========================================================================== */
+@media print {
+  /* Ẩn các thành phần không cần thiết khi in */
+  .no-print, 
+  .ant-layout-sider, 
+  .ant-layout-header,
+  .ant-btn { 
+      display: none !important; 
+  }
+
+  /* Reset margin/padding để in full trang A4 */
+  body, .ant-layout, .ant-layout-content {
+      background: white !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+  }
+
+  /* Đảm bảo nội dung đề thi hiển thị rõ */
+  .exam-content {
+      box-shadow: none !important;
+      border: none !important;
+      width: 100% !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+  }
+
+  /* Ngắt trang thông minh: Không cắt đôi câu hỏi */
+  .questions-list > div {
+      page-break-inside: avoid;
+  }
+}
+
+/* ==========================================================================
+   6. UTILITIES (Tiện ích nhỏ)
+   ========================================================================== */
+/* Hiệu ứng hover cho User Dropdown trên Header */
+.user-dropdown-hover:hover {
+  background-color: #e5e7eb !important;
+}
+
+/* Giữ form upload OCR gọn gàng */
+.ant-upload.ant-upload-drag {
+  background: #fff !important;
+}

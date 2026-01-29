@@ -1,0 +1,321 @@
+/* FILE: frontend/src/pages/Register.css */
+/* SUBTLE ANIMATIONS - COMPACT & NO SCROLL */
+
+/*  CONTAINER & BACKGROUND */
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg,
+            #047857 0%,
+            #059669 25%,
+            #10b981 50%,
+            #06b6d4 75%,
+            #0ea5e9 100%);
+}
+
+/* BACKGROUND SHAPES - Chuyển động nhẹ  */
+.register-container .background-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.register-container .shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    filter: blur(60px);
+}
+
+.register-container .shape-1 {
+    width: 380px;
+    height: 380px;
+    top: -90px;
+    left: -90px;
+    animation: floatGentle 28s ease-in-out infinite;
+}
+
+.register-container .shape-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -70px;
+    right: -70px;
+    animation: floatGentle 32s ease-in-out infinite reverse;
+}
+
+.register-container .shape-3 {
+    width: 220px;
+    height: 220px;
+    top: 40%;
+    left: 8%;
+    animation: pulseGentle 22s ease-in-out infinite;
+}
+
+@keyframes floatGentle {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(-15px, -15px);
+    }
+}
+
+@keyframes pulseGentle {
+
+    0%,
+    100% {
+        opacity: 0.08;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.12;
+        transform: scale(1.05);
+    }
+}
+
+/*  REGISTER CARD - COMPACT & NO SCROLL  */
+.register-card {
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    animation: fadeInUp 0.6s ease-out;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom scrollbar siêu mịn */
+.register-card::-webkit-scrollbar {
+    width: 5px;
+}
+
+.register-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.register-card::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #06b6d4, #10b981);
+    border-radius: 10px;
+}
+
+.register-card::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #0891b2, #059669);
+}
+
+/*  COMPACT SPACING  */
+.register-card .ant-space {
+    gap: 12px !important;
+}
+
+.register-card .ant-form-item {
+    margin-bottom: 12px !important;
+}
+
+.register-card .ant-divider {
+    margin: 10px 0 !important;
+}
+
+.register-card .ant-card-body {
+    padding: 20px !important;
+}
+
+/* = FORM LABEL  */
+.register-card .ant-form-item-label>label {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+/* INPUT  */
+.register-card .ant-input-affix-wrapper,
+.register-card .ant-input {
+    height: 40px;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    padding: 0 12px;
+    background: #fff;
+    font-size: 13.5px;
+    transition: all 0.2s ease;
+}
+
+.register-card .ant-input-affix-wrapper input {
+    border: none;
+    box-shadow: none;
+    padding: 6px 0;
+}
+
+/* Hover - chỉ đổi màu */
+.register-card .ant-input-affix-wrapper:hover,
+.register-card .ant-input:hover {
+    border-color: #10b981;
+}
+
+/* Focus - chỉ shadow nhẹ */
+.register-card .ant-input-affix-wrapper:focus-within,
+.register-card .ant-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Placeholder */
+.register-card input::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* Icon prefix */
+.register-card .ant-input-prefix {
+    margin-right: 8px;
+    color: #94a3b8;
+    transition: color 0.2s;
+}
+
+.register-card .ant-input-affix-wrapper:focus-within .ant-input-prefix {
+    color: #10b981;
+}
+
+/* SELECT DROPDOWN  */
+.register-card .ant-select {
+    height: 40px;
+}
+
+.register-card .ant-select .ant-select-selector {
+    height: 40px !important;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb !important;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.register-card .ant-select:hover .ant-select-selector {
+    border-color: #10b981 !important;
+}
+
+.register-card .ant-select-focused .ant-select-selector {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* PASSWORD INPUT  */
+.register-card .ant-input-password {
+    height: 40px;
+}
+
+/*  BUTTON  */
+.register-card .ant-btn-primary {
+    height: 42px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    transition: all 0.2s ease;
+}
+
+.register-card .ant-btn-primary:hover {
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
+}
+
+.register-card .ant-btn-primary:active {
+    transform: translateY(0);
+}
+
+/* LINKS  */
+.register-card a {
+    font-weight: 500;
+    color: #047857;
+    transition: color 0.2s;
+}
+
+.register-card a:hover {
+    color: #0891b2;
+}
+
+/*  VALIDATION MESSAGE  */
+.register-card .ant-form-item-explain-error {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/*  RESPONSIVE  */
+@media (max-width: 576px) {
+    .register-card {
+        max-width: 100%;
+        margin: 10px;
+        max-height: 95vh;
+    }
+
+    .register-card .ant-form-item {
+        margin-bottom: 10px !important;
+    }
+
+    .register-card .ant-input-affix-wrapper,
+    .register-card .ant-input {
+        height: 38px;
+    }
+
+    .register-card .ant-btn-primary {
+        height: 40px;
+    }
+}
+
+/* LOADING SPINNER  */
+.register-card .ant-btn-loading .anticon-loading {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/*  SUCCESS STATE  */
+.register-card .ant-form-item-has-success .ant-input-affix-wrapper {
+    border-color: #10b981;
+}
+
+/* ERROR STATE  */
+.register-card .ant-form-item-has-error .ant-input-affix-wrapper,
+.register-card .ant-form-item-has-error .ant-input {
+    border-color: #ef4444;
+}
+
+.register-card .ant-form-item-has-error .ant-input-affix-wrapper:focus-within {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
