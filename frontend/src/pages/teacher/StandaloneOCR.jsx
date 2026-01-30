@@ -1,131 +1,348 @@
+// src/pages/teacher/StandaloneOCR.jsx
 import { useState } from 'react';
-import { Card, Upload, Row, Col, Table, Button, message, Space, Input, Divider, Alert, Select, Empty, Typography } from 'antd';
-import { CloudUploadOutlined, CheckCircleOutlined, CloseCircleOutlined, SaveOutlined, FileImageOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Upload, Row, Col, Table, Button, message, Space, InputNumber, Divider, Alert, Tag, Spin, Empty, Typography, } from 'antd';
+import { InboxOutlined, CheckCircleOutlined, CloseCircleOutlined, SaveOutlined, FileImageOutlined, UserOutlined, ReloadOutlined,} from '@ant-design/icons';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../../config/api';
 
 const { Dragger } = Upload;
-const { Option } = Select;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const StandaloneOCR = () => {
-    const [imageUrl, setImageUrl] = useState(null);
-    const [ocrResults, setOcrResults] = useState([]);
-    const [studentInfo, setStudentInfo] = useState({ id: '', name: '' });
-    const [loading, setLoading] = useState(false);
+  const { examId } = useParams(); // Lấy examId từ URL (nếu có)
+  const navigate = useNavigate();
+  const [imageUrl, setImageUrl] = useState(null);
+  const [ocrResults, setOcrResults] = useState([]); // [{questionId, questionNumber, studentAnswer, correctAnswer, isCorrect}]
+  const [studentId, setStudentId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-    // Mock AI Analysis
-    const processImage = (file) => {
-        setLoading(true);
-        const reader = new FileReader();
-        reader.onload = (e) => setImageUrl(e.target.result);
-        reader.readAsDataURL(file);
-
-        setTimeout(() => {
-            const mockData = Array.from({ length: 10 }, (_, i) => ({
-                q: i + 1,
-                studentAns: ['A','B','C','D'][Math.floor(Math.random() * 4)],
-                correctAns: ['A','B','C','D'][i % 4],
-            })).map(item => ({ ...item, isCorrect: item.studentAns === item.correctAns }));
-            
-            setOcrResults(mockData);
-            setLoading(false);
-            message.success('Phân tích bài làm thành công!');
-        }, 1500);
+  // Upload props
+  const uploadProps = {
+    name: 'file',
+    multiple: false,
+    accept: 'image/*',
+    showUploadList: false,
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Chỉ được upload file ảnh (JPG, PNG)!');
         return false;
-    };
+      }
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('Ảnh phải nhỏ hơn 5MB!');
+        return false;
+      }
 
-    const handleResultChange = (index, field, value) => {
-        const newResults = [...ocrResults];
-        newResults[index][field] = value;
-        if(field === 'studentAns' || field === 'correctAns') {
-            newResults[index].isCorrect = newResults[index].studentAns === newResults[index].correctAns;
+      // Preview ảnh ngay
+      const reader = new FileReader();
+      reader.onload = (e) => setImageUrl(e.target.result);
+      reader.readAsDataURL(file);
+
+      // Gọi API chấm bài
+      handleUploadOCR(file);
+      return false; // Không upload mặc định của antd
+    },
+  };
+
+  // Gọi API chấm OCR
+  const handleUploadOCR = async (file) => {
+    if (!examId) {
+      message.error('Không tìm thấy mã đề thi!');
+      return;
+    }
+    if (!studentId) {
+      message.warning('Vui lòng nhập mã học sinh trước khi upload!');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post(
+        `/exams/${examId}/grade-ocr?studentId=${studentId}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
-        setOcrResults(newResults);
-    };
+      );
 
-    // 💾 LƯU KẾT QUẢ VÀO "DATABASE" (LocalStorage)
-    const handleSaveResults = () => {
-        if (!studentInfo.id || !studentInfo.name) {
-            return message.error('Vui lòng nhập Mã và Tên học sinh!');
-        }
+      // Giả sử backend trả về { answers: [...] }
+      const answers = response.answers || [];
+      if (answers.length === 0) {
+        message.warning('Không nhận diện được đáp án nào từ ảnh!');
+      } else {
+        setOcrResults(answers);
+        message.success(`Đã chấm xong! Tìm thấy ${answers.length} câu trả lời.`);
+      }
+    } catch (error) {
+      console.error('OCR upload error: - StandaloneOCR.jsx:82', error);
+      message.error('Chấm bài thất bại! Vui lòng thử lại hoặc kiểm tra ảnh.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const score = parseFloat((ocrResults.filter(r => r.isCorrect).length / ocrResults.length * 10).toFixed(2));
-        
-        // Tạo object kết quả
-        const newResult = {
-            id: Date.now(),
-            studentId: studentInfo.id,
-            fullName: studentInfo.name,
-            score: score,
-            answers: ocrResults,
-            examId: 'CHEM-MOCK-01' // Mặc định gán vào 1 mã đề để demo liên kết
-        };
-
-        // Lưu vào localStorage
-        const currentResults = JSON.parse(localStorage.getItem('exam_results') || '[]');
-        localStorage.setItem('exam_results', JSON.stringify([...currentResults, newResult]));
-
-        message.success(`Đã lưu điểm số (${score}đ) vào hệ thống!`);
-        
-        // Reset form
-        setImageUrl(null);
-        setOcrResults([]);
-        setStudentInfo({ id: '', name: '' });
-    };
-
-    const score = ocrResults.length ? (ocrResults.filter(r => r.isCorrect).length / ocrResults.length * 10).toFixed(2) : 0;
-
-    const columns = [
-        { title: 'Câu', dataIndex: 'q', align: 'center', width: 60 },
-        { 
-            title: 'Trò chọn', dataIndex: 'studentAns', align: 'center',
-            render: (text, r, i) => <Select value={text} onChange={(val) => handleResultChange(i, 'studentAns', val)} style={{ width: 70 }} status={r.isCorrect ? '' : 'error'}>{['A','B','C','D'].map(o => <Option key={o} value={o}>{o}</Option>)}</Select>
-        },
-        { 
-            title: 'Đáp án', dataIndex: 'correctAns', align: 'center',
-            render: (text, r, i) => <Select value={text} onChange={(val) => handleResultChange(i, 'correctAns', val)} style={{ width: 70 }}>{['A','B','C','D'].map(o => <Option key={o} value={o}>{o}</Option>)}</Select>
-        },
-        { title: 'Đ/S', dataIndex: 'isCorrect', align: 'center', render: (val) => val ? <CheckCircleOutlined style={{ color: '#10b981' }} /> : <CloseCircleOutlined style={{ color: '#ef4444' }} /> }
-    ];
-
-    return (
-        <div style={{ height: 'calc(100vh - 120px)', paddingBottom: 20 }}>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                <Title level={4} style={{ margin: 0 }}>Chấm thi OCG (Optical Character Grading)</Title>
-                {ocrResults.length > 0 && <Button onClick={() => { setImageUrl(null); setOcrResults([]); }}>Hủy</Button>}
-            </div>
-
-            <Row gutter={24} style={{ height: '100%' }}>
-                <Col span={14} style={{ height: '100%' }}>
-                    <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f8fafc', border: '1px dashed #d9d9d9' }} bodyStyle={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, overflow: 'hidden' }}>
-                        {imageUrl ? <img src={imageUrl} alt="Exam" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : 
-                            <Dragger name="file" multiple={false} beforeUpload={processImage} style={{ width: '80%', padding: 40, background: 'white' }}>
-                                <p className="ant-upload-drag-icon"><CloudUploadOutlined style={{ color: '#0891b2', fontSize: 64 }} /></p>
-                                <p className="ant-upload-text">Kéo thả ảnh bài thi vào đây</p>
-                            </Dragger>
-                        }
-                    </Card>
-                </Col>
-
-                <Col span={10} style={{ height: '100%' }}>
-                    <Card title="Kết quả chi tiết" style={{ height: '100%', display: 'flex', flexDirection: 'column' }} bodyStyle={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                        {ocrResults.length > 0 ? (
-                            <>
-                                <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
-                                    <Input placeholder="Mã học sinh (VD: HS001)" prefix={<UserOutlined />} value={studentInfo.id} onChange={e => setStudentInfo({...studentInfo, id: e.target.value})} />
-                                    <Input placeholder="Tên học sinh" prefix={<UserOutlined />} value={studentInfo.name} onChange={e => setStudentInfo({...studentInfo, name: e.target.value})} />
-                                    <Alert message={`ĐIỂM SỐ: ${score}`} type={score >= 5 ? 'success' : 'error'} showIcon style={{ fontWeight: 'bold' }} />
-                                </Space>
-                                <div style={{ flex: 1, overflow: 'auto' }}>
-                                    <Table dataSource={ocrResults} columns={columns} pagination={false} size="small" rowKey="q" />
-                                </div>
-                                <Divider style={{ margin: '12px 0' }} />
-                                <Button type="primary" icon={<SaveOutlined />} block size="large" onClick={handleSaveResults}>Lưu vào sổ điểm</Button>
-                            </>
-                        ) : <Empty description="Đang chờ ảnh bài thi..." style={{ marginTop: 60 }} />}
-                    </Card>
-                </Col>
-            </Row>
-        </div>
+  // Toggle sửa đúng/sai thủ công
+  const toggleCorrect = (questionId) => {
+    setOcrResults((prev) =>
+      prev.map((r) =>
+        r.questionId === questionId ? { ...r, isCorrect: !r.isCorrect } : r
+      )
     );
+  };
+
+  // Sửa đáp án HS thủ công
+  const handleStudentAnswerChange = (questionId, value) => {
+    setOcrResults((prev) =>
+      prev.map((r) =>
+        r.questionId === questionId
+          ? { ...r, studentAnswer: value, isCorrect: value === r.correctAnswer }
+          : r
+      )
+    );
+  };
+
+  // Lưu kết quả vào backend (submitExam)
+  const handleSaveResults = async () => {
+    if (!studentId) {
+      return message.error('Vui lòng nhập mã học sinh!');
+    }
+    if (ocrResults.length === 0) {
+      return message.warning('Chưa có dữ liệu bài làm để lưu!');
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        examId: parseInt(examId),
+        studentId: parseInt(studentId),
+        answers: ocrResults.map((r) => ({
+          questionId: r.questionId,
+          selectedCode: r.studentAnswer,
+        })),
+      };
+
+      await api.post('/exams/submit', payload);
+      message.success(`Đã lưu kết quả thành công! Điểm: ${score.toFixed(2)}`);
+      
+      // Reset form sau khi lưu
+      setImageUrl(null);
+      setOcrResults([]);
+      setStudentId(null);
+    } catch (error) {
+      console.error('Save results error: - StandaloneOCR.jsx:137', error);
+      message.error('Lưu kết quả thất bại!');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Tính điểm
+  const correctCount = ocrResults.filter((r) => r.isCorrect).length;
+  const totalQuestions = ocrResults.length;
+  const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 10 : 0;
+
+  const columns = [
+    {
+      title: 'Câu',
+      dataIndex: 'questionNumber',
+      key: 'questionNumber',
+      width: 60,
+      align: 'center',
+    },
+    {
+      title: 'Đáp án HS',
+      dataIndex: 'studentAnswer',
+      key: 'studentAnswer',
+      width: 140,
+      align: 'center',
+      render: (text, record, index) => (
+        <Select
+          value={text}
+          onChange={(val) => handleStudentAnswerChange(record.questionId, val)}
+          style={{ width: 80 }}
+          size="small"
+        >
+          <Option value="A">A</Option>
+          <Option value="B">B</Option>
+          <Option value="C">C</Option>
+          <Option value="D">D</Option>
+        </Select>
+      ),
+    },
+    {
+      title: 'Đáp án đúng',
+      dataIndex: 'correctAnswer',
+      key: 'correctAnswer',
+      width: 120,
+      align: 'center',
+      render: (text) => <Tag color="green">{text}</Tag>,
+    },
+    {
+      title: 'Kết quả',
+      dataIndex: 'isCorrect',
+      key: 'isCorrect',
+      width: 100,
+      align: 'center',
+      render: (isCorrect, record) => (
+        <Button
+          type="text"
+          icon={isCorrect ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : <CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+          onClick={() => toggleCorrect(record.questionId)}
+        >
+          {isCorrect ? 'Đúng' : 'Sai'}
+        </Button>
+      ),
+    },
+  ];
+
+  return (
+    <Card
+      title={
+        <Space>
+          <FileImageOutlined /> Chấm bài trắc nghiệm bằng OCR
+        </Space>
+      }
+      extra={
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={() => {
+            setImageUrl(null);
+            setOcrResults([]);
+            setStudentId(null);
+          }}>
+            Làm mới
+          </Button>
+        </Space>
+      }
+    >
+      <Row gutter={24} style={{ minHeight: '60vh' }}>
+        {/* Cột trái: Ảnh bài thi */}
+        <Col xs={24} lg={14}>
+          <Card
+            title="Ảnh phiếu trả lời"
+            bordered={false}
+            bodyStyle={{
+              padding: 0,
+              background: '#f8fafc',
+              minHeight: '500px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt="Phiếu trả lời"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '600px',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                }}
+              />
+            ) : (
+              <Dragger {...uploadProps} style={{ width: '90%', padding: '60px 0' }}>
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined style={{ fontSize: 64, color: '#1890ff' }} />
+                </p>
+                <p className="ant-upload-text" style={{ fontSize: 18 }}>
+                  Kéo thả hoặc nhấn để tải ảnh lên
+                </p>
+                <p className="ant-upload-hint">
+                  Hỗ trợ JPG, PNG. Tối đa 5MB. Ảnh rõ nét, không bị mờ.
+                </p>
+              </Dragger>
+            )}
+          </Card>
+        </Col>
+
+        {/* Cột phải: Kết quả & Điều khiển */}
+        <Col xs={24} lg={10}>
+          <Card
+            title="Kết quả chấm tự động"
+            bordered={false}
+            bodyStyle={{ minHeight: '500px', display: 'flex', flexDirection: 'column' }}
+          >
+            <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+              <div>
+                <Text strong>Mã học sinh: </Text>
+                <InputNumber
+                  placeholder="Nhập mã HS (bắt buộc)"
+                  style={{ width: '180px', marginLeft: 8 }}
+                  value={studentId}
+                  onChange={setStudentId}
+                  min={1}
+                  disabled={loading}
+                />
+              </div>
+
+              {ocrResults.length > 0 && (
+                <Alert
+                  message={
+                    <Space>
+                      <strong>ĐIỂM SỐ:</strong> {score.toFixed(2)} / 10
+                    </Space>
+                  }
+                  description={`Đúng ${correctCount}/${totalQuestions} câu`}
+                  type={score >= 5 ? 'success' : score >= 3.5 ? 'warning' : 'error'}
+                  showIcon
+                />
+              )}
+            </Space>
+
+            {loading ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Spin tip="Đang phân tích ảnh bài làm..." size="large" />
+              </div>
+            ) : ocrResults.length > 0 ? (
+              <>
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  <Table
+                    columns={columns}
+                    dataSource={ocrResults}
+                    rowKey="questionId"
+                    pagination={false}
+                    size="small"
+                    scroll={{ y: 400 }}
+                  />
+                </div>
+
+                <Divider style={{ margin: '16px 0' }} />
+
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  size="large"
+                  block
+                  loading={submitting}
+                  onClick={handleSaveResults}
+                  disabled={submitting || !studentId}
+                >
+                  Lưu kết quả vào hệ thống
+                </Button>
+              </>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <Space direction="vertical" align="center">
+                    <Text>Chưa có dữ liệu bài làm</Text>
+                    <Text type="secondary">Vui lòng upload ảnh phiếu trả lời để bắt đầu</Text>
+                  </Space>
+                }
+                style={{ marginTop: 100 }}
+              />
+            )}
+          </Card>
+        </Col>
+      </Row>
+    </Card>
+  );
 };
+
 export default StandaloneOCR;

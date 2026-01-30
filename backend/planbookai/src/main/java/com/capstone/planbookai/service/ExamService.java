@@ -18,37 +18,52 @@ public class ExamService {
     private final QuestionRepository questionRepo;
     private final AnswerRepository answerRepo;
     private final StudentResultRepository studentResultRepo;
+    private final TopicRepository topicRepo; // Thêm để lấy tên chủ đề nếu cần
 
     public ExamService(
             ExamRepository examRepo,
             ExamQuestionRepository examQuestionRepo,
             QuestionRepository questionRepo,
             AnswerRepository answerRepo,
-            StudentResultRepository studentResultRepo
+            StudentResultRepository studentResultRepo,
+            TopicRepository topicRepo
     ) {
         this.examRepo = examRepo;
         this.examQuestionRepo = examQuestionRepo;
         this.questionRepo = questionRepo;
         this.answerRepo = answerRepo;
         this.studentResultRepo = studentResultRepo;
+        this.topicRepo = topicRepo;
     }
 
+    // --- 1. TẠO ĐỀ THI TỰ ĐỘNG ---
     @Transactional
     public Exam generateExam(GenerateExamRequest req) {
+        // Lấy câu hỏi ngẫu nhiên từ ngân hàng
         List<Question> questions = new ArrayList<>();
-
         questions.addAll(questionRepo.findRandom(req.getTopicId(), "EASY", req.getEasy()));
         questions.addAll(questionRepo.findRandom(req.getTopicId(), "MEDIUM", req.getMedium()));
         questions.addAll(questionRepo.findRandom(req.getTopicId(), "HARD", req.getHard()));
 
+        // Trộn ngẫu nhiên thứ tự câu hỏi
         Collections.shuffle(questions);
 
+        // Tạo đối tượng Exam
         Exam exam = new Exam();
         exam.setTopicId(req.getTopicId());
+        
+        // LƯU QUAN TRỌNG: Tên đề và Thời gian
+        exam.setExamName(req.getExamName());
+        exam.setDuration(req.getDuration());
+        
+        // Tạo mã đề ngẫu nhiên (8 ký tự)
         exam.setExamCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
         exam = examRepo.save(exam);
 
+        // Lưu danh sách câu hỏi vào bảng trung gian
         for (Question q : questions) {
+            // Trộn thứ tự đáp án (A, B, C, D)
             List<String> order = new ArrayList<>(List.of("A", "B", "C", "D"));
             Collections.shuffle(order);
 
@@ -62,20 +77,32 @@ public class ExamService {
         return exam;
     }
 
+    // --- 2. LẤY TẤT CẢ ĐỀ THI ---
     public List<Exam> getAllExams() {
         return examRepo.findAll();
     }
 
+    // --- 3. LẤY CHI TIẾT ĐỀ THI (Cho Giáo viên xem & In) ---
     public ExamDetailResponse getExamDetailById(Long examId) {
         Exam exam = examRepo.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
+        // Lấy danh sách câu hỏi
         List<ExamQuestion> eqs = examQuestionRepo.findByExamId(examId);
+
+        // Lấy thông tin Topic (để hiển thị tên chủ đề)
+        Topic topic = topicRepo.findById(exam.getTopicId()).orElse(null);
 
         ExamDetailResponse res = new ExamDetailResponse();
         res.setId(exam.getId());
         res.setTopicId(exam.getTopicId());
+        res.setTopicTitle(topic != null ? topic.getTitle() : ""); // Bổ sung nếu DTO có trường này
         res.setExamCode(exam.getExamCode());
+        
+        // TRẢ VỀ TÊN VÀ THỜI GIAN ĐỂ IN
+        res.setExamName(exam.getExamName());
+        res.setDuration(exam.getDuration());
+        
         res.setTotalQuestions(eqs.size());
 
         List<ExamDetailResponse.QuestionDetail> questionDetails = new ArrayList<>();
@@ -88,19 +115,23 @@ public class ExamService {
             qd.content = q.getContent();
             qd.level = q.getLevel().toString();
 
+            // Lấy đáp án và map theo Code (A, B, C, D)
             List<Answer> answers = answerRepo.findByQuestionId(q.getId());
             Map<String, Answer> map = answers.stream()
                     .collect(Collectors.toMap(Answer::getCode, a -> a));
 
             List<ExamDetailResponse.AnswerDetail> answerDetails = new ArrayList<>();
+            // Duyệt theo thứ tự đã trộn trong ExamQuestion
             for (String code : eq.getAnswerOrder().split(",")) {
                 Answer a = map.get(code);
-                ExamDetailResponse.AnswerDetail ad = new ExamDetailResponse.AnswerDetail();
-                ad.id = a.getId();
-                ad.code = a.getCode();
-                ad.content = a.getContent();
-                ad.isCorrect = a.getIsCorrect();
-                answerDetails.add(ad);
+                if (a != null) {
+                    ExamDetailResponse.AnswerDetail ad = new ExamDetailResponse.AnswerDetail();
+                    ad.id = a.getId();
+                    ad.code = a.getCode();
+                    ad.content = a.getContent();
+                    ad.isCorrect = a.getIsCorrect(); // Giáo viên cần thấy đáp án đúng
+                    answerDetails.add(ad);
+                }
             }
 
             qd.answers = answerDetails;
@@ -111,6 +142,7 @@ public class ExamService {
         return res;
     }
 
+    // --- 4. LẤY ĐỀ THI ĐỂ LÀM BÀI (Cho Học sinh - Không lộ đáp án đúng) ---
     public RenderExamResponse renderExamByCode(String examCode) {
         Exam exam = examRepo.findByExamCode(examCode)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
@@ -119,6 +151,8 @@ public class ExamService {
 
         RenderExamResponse res = new RenderExamResponse();
         res.setExamId(exam.getId());
+        res.setExamName(exam.getExamName()); // Hiển thị tên đề
+        res.setDuration(exam.getDuration()); // Hiển thị thời gian
 
         List<RenderExamResponse.QuestionRender> questionRenders = new ArrayList<>();
 
@@ -136,12 +170,14 @@ public class ExamService {
             List<RenderExamResponse.AnswerRender> ars = new ArrayList<>();
             for (String code : eq.getAnswerOrder().split(",")) {
                 Answer a = map.get(code);
-                RenderExamResponse.AnswerRender ar = new RenderExamResponse.AnswerRender();
-                ar.id = a.getId();
-                ar.content = a.getContent();
-                ars.add(ar);
+                if (a != null) {
+                    RenderExamResponse.AnswerRender ar = new RenderExamResponse.AnswerRender();
+                    ar.id = a.getId();
+                    ar.content = a.getContent();
+                    // KHÔNG TRẢ VỀ isCorrect Ở ĐÂY
+                    ars.add(ar);
+                }
             }
-
             qr.answers = ars;
             questionRenders.add(qr);
         }
@@ -150,6 +186,7 @@ public class ExamService {
         return res;
     }
 
+    // --- 5. NỘP BÀI ---
     @Transactional
     public StudentResult submitExam(SubmitExamRequest req) {
         int correct = 0;
@@ -167,7 +204,7 @@ public class ExamService {
             }
         }
 
-        double score = ((double) correct / total) * 10;
+        double score = total > 0 ? ((double) correct / total) * 10 : 0;
 
         StudentResult result = new StudentResult();
         result.setExamId(req.getExamId());
@@ -177,9 +214,10 @@ public class ExamService {
         return studentResultRepo.save(result);
     }
 
+    // --- CÁC HÀM PHỤ TRỢ KHÁC ---
+
+    // Placeholder cho OCR (Chưa implement logic xử lý ảnh)
     public StudentResult gradeByOCR(Long examId, Long studentId, MultipartFile file) {
-        // TODO: Implement OCR processing
-        // Placeholder for now
         StudentResult result = new StudentResult();
         result.setExamId(examId);
         result.setStudentId(studentId);
@@ -193,7 +231,6 @@ public class ExamService {
 
     public ExamStatisticsResponse getExamStatistics(Long examId) {
         List<StudentResult> results = studentResultRepo.findByExamId(examId);
-
         ExamStatisticsResponse stats = new ExamStatisticsResponse();
         stats.setExamId(examId);
         stats.setTotalStudents(results.size());
@@ -212,16 +249,12 @@ public class ExamService {
         DoubleSummaryStatistics summary = results.stream()
                 .mapToDouble(StudentResult::getScore)
                 .summaryStatistics();
-
         stats.setMaxScore(summary.getMax());
         stats.setMinScore(summary.getMin());
 
-        // Score distribution
         Map<String, Integer> distribution = new LinkedHashMap<>();
-        distribution.put("0-2", 0);
-        distribution.put("2-4", 0);
-        distribution.put("4-6", 0);
-        distribution.put("6-8", 0);
+        distribution.put("0-2", 0); distribution.put("2-4", 0);
+        distribution.put("4-6", 0); distribution.put("6-8", 0);
         distribution.put("8-10", 0);
 
         for (StudentResult r : results) {
@@ -232,7 +265,6 @@ public class ExamService {
             else if (score < 8) distribution.merge("6-8", 1, Integer::sum);
             else distribution.merge("8-10", 1, Integer::sum);
         }
-
         stats.setScoreDistribution(distribution);
         return stats;
     }

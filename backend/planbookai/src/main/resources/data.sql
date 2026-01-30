@@ -1,92 +1,34 @@
--- ===============================
--- CLEAN (TRÁNH DUPLICATE KHI RESTART)
--- ===============================
-DELETE FROM answers;
-DELETE FROM questions;
-DELETE FROM topics;
-DELETE FROM grades;
-DELETE FROM subjects;
+-- =================================================================================
+-- 1. LÀM SẠCH DATABASE
+-- =================================================================================
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE answers;
+TRUNCATE TABLE questions;
+TRUNCATE TABLE topics;
+TRUNCATE TABLE grades;
+TRUNCATE TABLE subjects;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
 
--- ===============================
--- SUBJECT
--- ===============================
-INSERT INTO subjects (name)
-VALUES ('Hóa học');
-
--- ===============================
--- GRADES
--- ===============================
-INSERT INTO grades (name) VALUES ('Lớp 10');
-INSERT INTO grades (name) VALUES ('Lớp 11');
-INSERT INTO grades (name) VALUES ('Lớp 12');
-
--- ===============================
--- TOPICS
--- ===============================
-INSERT INTO topics (title, subject_id, grade_id)
+-- =================================================================================
+-- 2. TẠO TÀI KHOẢN ADMIN (Thủ công bằng SQL)
+-- =================================================================================
+-- User: admin / Pass: admin123
+-- Lưu ý: Chuỗi hash này là của 'admin123' chuẩn BCrypt
+INSERT INTO users (username, email, password, role, status, enabled, phone)
 VALUES (
-    'Nhóm Halogen',
-    (SELECT id FROM subjects WHERE name = 'Hóa học'),
-    (SELECT id FROM grades WHERE name = 'Lớp 10')
+    'admin',
+    'admin@planbook.edu.vn',
+    '$2a$10$N.zmdr9k7uOCVgFsl.O9C.ec0ishLFib/h05gr9n1U.Z3.f.w.y.i', 
+    'ROLE_ADMIN',
+    'ACTIVE',
+    true,
+    '0909000111'
 );
 
-INSERT INTO topics (title, subject_id, grade_id)
-VALUES (
-    'Nitơ và Hợp chất',
-    (SELECT id FROM subjects WHERE name = 'Hóa học'),
-    (SELECT id FROM grades WHERE name = 'Lớp 11')
-);
-
-INSERT INTO topics (title, subject_id, grade_id)
-VALUES (
-    'Este - Lipit',
-    (SELECT id FROM subjects WHERE name = 'Hóa học'),
-    (SELECT id FROM grades WHERE name = 'Lớp 12')
-);
-
--- ===============================
--- QUESTIONS
--- ===============================
-INSERT INTO questions (content, level, topic_id)
-VALUES (
-    '<p>Nguyên tố nào sau đây thuộc nhóm <strong>Halogen</strong>?</p>',
-    'EASY',
-    (SELECT id FROM topics WHERE title = 'Nhóm Halogen')
-);
-
-INSERT INTO questions (content, level, topic_id)
-VALUES (
-    '<p>Công thức hóa học của khí cười là gì? (Gợi ý: N<sub>2</sub>O)</p>',
-    'MEDIUM',
-    (SELECT id FROM topics WHERE title = 'Nitơ và Hợp chất')
-);
-
--- ===============================
--- ANSWERS – QUESTION 1
--- ===============================
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('A', 'Natri (Na)', false, (SELECT id FROM questions WHERE level = 'EASY' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('B', 'Clo (Cl)', true, (SELECT id FROM questions WHERE level = 'EASY' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('C', 'Sắt (Fe)', false, (SELECT id FROM questions WHERE level = 'EASY' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('D', 'Oxi (O)', false, (SELECT id FROM questions WHERE level = 'EASY' LIMIT 1));
-
--- ===============================
--- ANSWERS – QUESTION 2
--- ===============================
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('A', 'NO', false, (SELECT id FROM questions WHERE level = 'MEDIUM' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('B', 'NO<sub>2</sub>', false, (SELECT id FROM questions WHERE level = 'MEDIUM' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('C', 'N<sub>2</sub>O', true, (SELECT id FROM questions WHERE level = 'MEDIUM' LIMIT 1));
-
-INSERT INTO answers (code, content, is_correct, question_id)
-VALUES ('D', 'NH<sub>3</sub>', false, (SELECT id FROM questions WHERE level = 'MEDIUM' LIMIT 1));
+-- =================================================================================
+-- 3. DỮ LIỆU CÂU HỎI & MÔN HỌC
+-- =================================================================================
+-- Phần này để trống. 
+-- File 'DataSeeder.java' sẽ tự động chạy sau khi server bật
+-- để tạo 4 môn học và 400 câu hỏi như bạn yêu cầu.

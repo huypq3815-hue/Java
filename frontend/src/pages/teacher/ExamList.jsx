@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Tag, Card, message, Popconfirm, Input } from 'antd';
-import { PlusOutlined, EyeOutlined, DeleteOutlined, BarChartOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 
@@ -33,14 +33,19 @@ const ExamList = () => {
         try {
             await api.delete(`/exams/${id}`);
             message.success('Xóa đề thi thành công!');
-            fetchExams();
+            setExams(prev => prev.filter(e => e.id !== id)); // Xóa trên UI luôn
         } catch (error) {
-            console.error('Error deleting exam: - ExamList.jsx:38', error);
             message.error('Xóa thất bại!');
         }
     };
 
     const columns = [
+        {
+            title: 'Tên đề thi', // CỘT MỚI
+            dataIndex: 'examName',
+            key: 'examName',
+            render: (text) => <strong>{text || 'Không tên'}</strong>,
+        },
         {
             title: 'Mã đề',
             dataIndex: 'examCode',
@@ -49,18 +54,21 @@ const ExamList = () => {
             render: (code) => <Tag color="blue">{code}</Tag>,
         },
         {
-            title: 'Chủ đề',
-            dataIndex: 'topicId',
-            key: 'topicId',
-            width: 150,
-            render: (topicId) => `Topic ${topicId}`,
+            title: 'Thời gian', // CỘT MỚI
+            dataIndex: 'duration',
+            key: 'duration',
+            width: 100,
+            render: (text) => <Tag color="orange">{text} phút</Tag>,
         },
         {
-            title: 'Số câu hỏi',
-            dataIndex: 'totalQuestions',
-            key: 'totalQuestions',
+            title: 'Chủ đề',
+            dataIndex: 'topicId', // Nếu API trả về topicName thì sửa thành topicName
+            key: 'topicId',
             width: 120,
-            render: () => <Tag color="green">10 câu</Tag>, // TODO: Get from API
+            render: (id) => {
+                const map = {1: 'Toán', 2: 'Vật lí', 3: 'Hóa học', 4: 'Tiếng Anh'};
+                return map[id] || `Topic ${id}`;
+            },
         },
         {
             title: 'Hành động',
@@ -84,8 +92,7 @@ const ExamList = () => {
                         Kết quả
                     </Button>
                     <Popconfirm
-                        title="Xác nhận xóa?"
-                        description="Bạn có chắc muốn xóa đề thi này?"
+                        title="Xóa đề thi?"
                         onConfirm={() => handleDelete(record.id)}
                         okText="Xóa"
                         cancelText="Hủy"
@@ -100,7 +107,8 @@ const ExamList = () => {
     ];
 
     const filteredExams = exams.filter(exam => 
-        exam.examCode?.toLowerCase().includes(searchText.toLowerCase())
+        (exam.examCode?.toLowerCase().includes(searchText.toLowerCase())) ||
+        (exam.examName?.toLowerCase().includes(searchText.toLowerCase()))
     );
 
     return (
@@ -119,11 +127,10 @@ const ExamList = () => {
                 </div>
 
                 <Search
-                    placeholder="Tìm kiếm theo mã đề..."
+                    placeholder="Tìm kiếm theo tên hoặc mã đề..."
                     allowClear
                     size="large"
-                    style={{ width: 300 }}
-                    onSearch={(value) => setSearchText(value)}
+                    style={{ width: 350 }}
                     onChange={(e) => setSearchText(e.target.value)}
                 />
 
@@ -132,11 +139,7 @@ const ExamList = () => {
                     dataSource={filteredExams}
                     loading={loading}
                     rowKey="id"
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Tổng ${total} đề thi`,
-                    }}
+                    pagination={{ pageSize: 10 }}
                 />
             </Space>
         </Card>

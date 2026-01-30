@@ -16,4 +16,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findRandom(@Param("topicId") Long topicId, @Param("level") String level, @Param("limit") int limit);
     
     List<Question> findByTopicIdAndLevel(Long topicId, QuestionLevel level);
+
+    List<Question> findTop5ByOrderByIdDesc();
 }

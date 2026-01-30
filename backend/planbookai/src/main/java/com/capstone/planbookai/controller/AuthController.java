@@ -19,7 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List; // <--- Cần thêm import này
+import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -55,12 +55,12 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .orElse("ROLE_TEACHER");
 
-        // SỬA Ở ĐÂY: Bọc 'role' vào trong 'List.of()' để khớp với JwtResponse
+        // Trả về response
         return ResponseEntity.ok(new JwtResponse(jwt,
                                                  userDetails.getId(), 
                                                  userDetails.getUsername(),
                                                  userDetails.getEmail(), 
-                                                 List.of(role))); // <--- Đã sửa thành List
+                                                 List.of(role)));
     }
 
     // --- REGISTER ---
@@ -84,6 +84,13 @@ public class AuthController {
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
         user.setFullName(signUpRequest.getFullName());
+        
+        // FIX: Lưu số điện thoại
+        user.setPhone(signUpRequest.getPhone());
+        
+        // FIX: Set trạng thái mặc định để đăng nhập được ngay
+        user.setStatus("ACTIVE");
+        user.setEnabled(true);
 
         // Xử lý Role
         String strRole = signUpRequest.getRole();
@@ -91,12 +98,14 @@ public class AuthController {
 
         if (strRole != null && !strRole.isEmpty()) {
             try {
-                // Chuyển "admin" -> ROLE_ADMIN, "teacher" -> ROLE_TEACHER
-                // Nếu input là "ROLE_ADMIN" thì cần cẩn thận, đoạn code này chỉ nhận "admin"
-                // Logic dưới đây giả định input là "admin" hoặc "teacher"
-                roleEnum = Role.valueOf("ROLE_" + strRole.toUpperCase());
+                // Chuẩn hóa input: "teacher" -> "ROLE_TEACHER", "ROLE_ADMIN" -> "ROLE_ADMIN"
+                String roleName = strRole.toUpperCase();
+                if (!roleName.startsWith("ROLE_")) {
+                    roleName = "ROLE_" + roleName;
+                }
+                roleEnum = Role.valueOf(roleName);
             } catch (IllegalArgumentException e) {
-                // Nếu lỗi thì mặc định là Teacher
+                // Nếu lỗi thì fallback về Teacher
                 roleEnum = Role.ROLE_TEACHER;
             }
         }

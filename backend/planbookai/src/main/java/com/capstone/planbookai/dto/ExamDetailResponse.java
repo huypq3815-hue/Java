@@ -5,8 +5,17 @@ import java.util.List;
 public class ExamDetailResponse {
     private Long id;
     private Long topicId;
-    private String topicName;
+    
+    // Đổi tên thành topicTitle cho khớp với ExamService
+    private String topicTitle; 
+    
     private String examCode;
+    
+    // --- BỔ SUNG 2 TRƯỜNG NÀY ---
+    private String examName;
+    private Integer duration;
+    // ----------------------------
+
     private List<QuestionDetail> questions;
     private Integer totalQuestions;
 
@@ -17,11 +26,19 @@ public class ExamDetailResponse {
     public Long getTopicId() { return topicId; }
     public void setTopicId(Long topicId) { this.topicId = topicId; }
 
-    public String getTopicName() { return topicName; }
-    public void setTopicName(String topicName) { this.topicName = topicName; }
+    public String getTopicTitle() { return topicTitle; }
+    public void setTopicTitle(String topicTitle) { this.topicTitle = topicTitle; }
 
     public String getExamCode() { return examCode; }
     public void setExamCode(String examCode) { this.examCode = examCode; }
+
+    // Getter & Setter cho examName
+    public String getExamName() { return examName; }
+    public void setExamName(String examName) { this.examName = examName; }
+
+    // Getter & Setter cho duration
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
 
     public List<QuestionDetail> getQuestions() { return questions; }
     public void setQuestions(List<QuestionDetail> questions) { this.questions = questions; }
@@ -40,6 +57,6 @@ public class ExamDetailResponse {
         public Long id;
         public String code;
         public String content;
-        public Boolean isCorrect; // Chỉ hiển thị cho teacher
+        public Boolean isCorrect; 
     }
 }
