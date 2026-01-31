@@ -94,7 +94,12 @@ const LessonPlanGenerator = () => {
                 <Card title="Cấu hình bài dạy" bordered={false} style={{ marginBottom: 16 }}>
                     <Form form={form} layout="vertical" onFinish={handleGenerate}>
                         <Form.Item label="Môn học" name="subject" initialValue="Hóa học">
-                            <Select><Option value="Hóa học">Hóa học</Option><Option value="Vật lý">Vật lý</Option></Select>
+                            <Select>
+                            <Option value="Toán">Toán</Option>
+                            <Option value="Hóa học">Hóa học</Option>
+                            <Option value="Vật lý">Vật lý</Option>
+                            <Option value="Sinh học">Sinh học</Option>
+                            </Select>
                         </Form.Item>
                         <Form.Item label="Tên bài / Chủ đề" name="topic" rules={[{ required: true }]}>
                             <Input placeholder="VD: Axit Nitric" onChange={(e) => setTitle(e.target.value)} />

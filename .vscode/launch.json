@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<planbookai>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.capstone.planbookai.Application",
+            "projectName": "planbookai",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

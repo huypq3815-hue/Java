@@ -8,40 +8,33 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/prompts")
+@CrossOrigin(origins = "*")
 public class PromptTemplateController {
 
     @Autowired
     private PromptTemplateService promptTemplateService;
 
     @GetMapping
-    public ResponseEntity<List<PromptTemplate>> getAllPrompts() {
-        return ResponseEntity.ok(promptTemplateService.getAllTemplates());
-    }
-
-    @GetMapping("/{name}")
-    public ResponseEntity<?> getPromptByName(@PathVariable String name) {
-        return promptTemplateService.getTemplateByName(name)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public List<PromptTemplate> getAllPrompts() {
+        return promptTemplateService.getAllTemplates();
     }
 
     @PostMapping
-    public ResponseEntity<PromptTemplate> createPrompt(@RequestBody PromptTemplate promptTemplate) {
-        return ResponseEntity.ok(promptTemplateService.saveTemplate(promptTemplate));
+    public ResponseEntity<PromptTemplate> createPrompt(@RequestBody PromptTemplate template) {
+        return ResponseEntity.ok(promptTemplateService.saveTemplate(template));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePrompt(@PathVariable Long id, @RequestBody PromptTemplate promptTemplate) {
-        promptTemplate.setId(id);
-        return ResponseEntity.ok(promptTemplateService.saveTemplate(promptTemplate));
+    public ResponseEntity<PromptTemplate> updatePrompt(@PathVariable Long id, @RequestBody PromptTemplate template) {
+        template.setId(id); // Ensure ID is set
+        return ResponseEntity.ok(promptTemplateService.saveTemplate(template));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePrompt(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePrompt(@PathVariable Long id) {
         promptTemplateService.deleteTemplate(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

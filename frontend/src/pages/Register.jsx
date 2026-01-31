@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Space, message, Select, Divider } from 'antd';
+import { Form, Input, Button, Card, Typography, Space, message, Divider } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, BookOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../config/api';
 import './Register.css';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const Register = () => {
     const [loading, setLoading] = useState(false);
@@ -16,18 +15,19 @@ const Register = () => {
         setLoading(true);
 
         try {
-            //Api 
-            await api.post('/auth/register', {
+            //Api
+            const response = await api.post('/auth/register', {
                 username: values.username,
                 email: values.email,
                 password: values.password,
+                fullName: values.fullName,  // Fix: fullName thay vì phone
                 phone: values.phone,
-                role: 'TEACHER', // Mặc định đăng ký là giáo viên
+                role: 'TEACHER'  // Fix: gửi "TEACHER" backend sẽ add "ROLE_"
             });
             message.success('Đăng ký thành công!');
             navigate('/login');
         } catch (error) {
-            console.error('Register error:', error);
+            console.error('Register error: - Register.jsx:30', error);
             message.error(error.response?.data?.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại!');
         } finally {
             setLoading(false);

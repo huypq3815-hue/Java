@@ -5,11 +5,11 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "users", 
-       uniqueConstraints = { 
-           @UniqueConstraint(columnNames = "username"),
-           @UniqueConstraint(columnNames = "email") 
-       })
+@Table(name = "users",
+        uniqueConstraints = {
+            @UniqueConstraint(columnNames = "username"),
+            @UniqueConstraint(columnNames = "email")
+        })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,8 +30,16 @@ public class User {
 
     private String fullName;
 
+    private String phone; 
+
     @Enumerated(EnumType.STRING)
     private Role role;
+    
+    @Column(columnDefinition = "VARCHAR(20) DEFAULT 'ACTIVE'")
+    private String status;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT true")
+    private boolean enabled = true;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -39,5 +47,6 @@ public class User {
     @PrePersist
     protected void onCreate() {
         createdAt = new Date();
+        if (status == null) status = "ACTIVE"; // Mặc định là Active
     }
 }
